@@ -96,6 +96,10 @@ public class ServiceUtils {
 
         Map<I, D> resultMap = new HashMap<>();
 
+        /*
+        * 这里执行了传进来的方法Tag::getId作为他的key
+        * 遍历list的每一个元素 执行getId作为key 然后该元素（data）作为value
+        * */
         list.forEach(data -> resultMap.putIfAbsent(mappingFunction.apply(data), data));
 
         return resultMap;

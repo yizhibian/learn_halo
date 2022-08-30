@@ -78,6 +78,10 @@ public class ContentServiceImpl extends AbstractCrudService<Content, Integer>
         contentPatchLog.setPublishTime(new Date());
         contentPatchLogService.create(contentPatchLog);
 
+        /*
+        * 根据postId找内容（content
+        * 这里好像是根据 草稿箱里的。。。
+        * */
         Content postContent = getById(postId);
         postContent.setPatchLogId(contentPatchLog.getId());
         postContent.setStatus(PostStatus.PUBLISHED);

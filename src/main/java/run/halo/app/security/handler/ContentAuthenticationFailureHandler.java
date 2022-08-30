@@ -19,6 +19,7 @@ public class ContentAuthenticationFailureHandler implements AuthenticationFailur
     public void onFailure(HttpServletRequest request, HttpServletResponse response,
         AbstractHaloException exception) throws IOException, ServletException {
         if (exception instanceof NotInstallException) {
+            //重定向到http://127.0.0.1:8090/install
             response.sendRedirect(request.getContextPath() + "/install");
             return;
         }

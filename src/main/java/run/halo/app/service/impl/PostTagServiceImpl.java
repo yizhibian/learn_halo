@@ -115,6 +115,12 @@ public class PostTagServiceImpl extends AbstractCrudService<PostTag, Integer>
             return Collections.emptyMap();
         }
 
+        /*
+        * 找到所有PostTag 就是post和tag关联表的内容
+        * 然后获取其中的tagId
+        * 再根据Id去获取所有tags
+        * */
+
         // Find all post tags
         List<PostTag> postTags = postTagRepository.findAllByPostIdIn(postIds);
 
@@ -124,12 +130,32 @@ public class PostTagServiceImpl extends AbstractCrudService<PostTag, Integer>
         // Find all tags
         List<Tag> tags = tagRepository.findAllById(tagIds);
 
+        /*
+         * 这里执行了传进来的方法Tag::getId作为他的key
+         * 遍历list的每一个元素 执行getId作为key 然后该元素（data）作为value
+         * 返回得到一个map
+         * */
         // Convert to tag map
         Map<Integer, Tag> tagMap = ServiceUtils.convertToMap(tags, Tag::getId);
 
         // Create tag list map
         Map<Integer, List<Tag>> tagListMap = new HashMap<>();
 
+
+        /*
+        * 对于每个post&Tag 都把其中postId作为key value则对应生成一个LinkedList（不知道这里为什么用postId感觉又歧义---规范定义的是k这样
+        * 这个add就会往value里面加值 虽然有一点不能理解 大概是这个作用
+        *
+        * 规范：
+        * 如果指定的键还没有与值关联(或映射为空)，尝试使用给定的映射函数计算它的值，并将其输入到这个映射中，除非为空。
+        * 如果映射函数返回null，则没有映射记录。 如果映射函数本身抛出(未检查)异常，则重新抛出异常，并且不记录映射。
+        * 最常见的用法是构造一个新对象作为初始映射值或记忆结果，如:
+        *   map.computeIfAbsent(key, k -> new Value(f(k)));
+        * 或实现多值映射，map >，支持每个键多个值:
+        *   map.computeIfAbsent(key, k -> new HashSet<V>()).add(v);
+        *
+        * 所以这里就需要多值映射 因为每个postId可以对应多个tag
+        * */
         // Foreach and collect
         postTags.forEach(
             postTag -> tagListMap.computeIfAbsent(postTag.getPostId(), postId -> new LinkedList<>())
@@ -218,6 +244,17 @@ public class PostTagServiceImpl extends AbstractCrudService<PostTag, Integer>
 
         List<PostTag> postTags = postTagRepository.findAllByPostId(postId);
 
+        /*
+        * postTagsStaging ：这次操作中添加的tag 联系的postTag
+        * postTags：这是数据库里的
+        * postTagsToRemove
+        * postTagsToCreate
+        *
+        * 如果postTagsStaging中不存在postTags 就加入postTagsToRemove列表中（postTag过期
+        * 反过来如果postTags中不存在postTagsStaging 就加入postTagsToCreate列表中（新建postTag
+        *
+        * 感觉有的复杂的逻辑 但是就是更新postTags
+        * */
         postTags.forEach(postTag -> {
             if (!postTagsStaging.contains(postTag)) {
                 postTagsToRemove.add(postTag);

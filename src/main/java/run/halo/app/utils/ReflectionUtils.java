@@ -34,6 +34,13 @@ public class ReflectionUtils {
         ParameterizedType currentType = null;
 
         for (Type genericType : genericTypes) {
+            /*
+            * 这个判断是为了找到是参数化类型 ----- ParameterizedType   例如什么List<String> 、 Map<String,Long> mapString;...
+            * 只有具有<>（泛型）符号的变量是参数化类型
+            *
+            * 然后通过getRawType获取类信息进行比对
+            * 找到则返回之
+            * */
             if (genericType instanceof ParameterizedType) {
                 ParameterizedType parameterizedType = (ParameterizedType) genericType;
                 if (parameterizedType.getRawType().getTypeName().equals(superType.getTypeName())) {

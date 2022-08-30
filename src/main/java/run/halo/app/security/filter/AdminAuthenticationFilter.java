@@ -53,7 +53,13 @@ public class AdminAuthenticationFilter extends AbstractAuthenticationFilter {
         this.userService = userService;
         this.haloProperties = haloProperties;
 
+
         addUrlPatterns("/api/admin/**", "/api/content/comments");
+
+        /*
+        * 上面是拦截所有该路径下的
+        * 下面是排除以下这些路径
+        * */
 
         addExcludeUrlPatterns(
             "/api/admin/login",
@@ -80,6 +86,14 @@ public class AdminAuthenticationFilter extends AbstractAuthenticationFilter {
     protected void doAuthenticate(HttpServletRequest request, HttpServletResponse response,
         FilterChain filterChain) throws ServletException, IOException {
 
+        // 如果未设置认证
+        /*
+        * 如果博客未设置身份认证，
+        * 那么将 users 表中的第一个用户作为当前用户，
+        * 并存储到 ThreadLocal 容器中，
+        * ThreadLocal 可用于在同一个线程内的多个函数或者组件之间传递公共信息。
+        * 如果开启了身份认证，则继续向下执行。
+        * */
         if (!haloProperties.isAuthEnabled()) {
             // Set security
             userService.getCurrentUser().ifPresent(user ->
@@ -91,6 +105,7 @@ public class AdminAuthenticationFilter extends AbstractAuthenticationFilter {
             return;
         }
 
+        // 获取 token, 从请求的 Query 参数中获取 admin_token 或者从 Header 中获取 Admin-Authorization
         // Get token from request
         String token = getTokenFromRequest(request);
 
@@ -98,6 +113,7 @@ public class AdminAuthenticationFilter extends AbstractAuthenticationFilter {
             throw new AuthenticationException("未登录，请登录后访问");
         }
 
+        // 根据 token 从 cacheStore 缓存中获取用户 id
         // Get user id from cache
         Optional<Integer> optionalUserId =
             cacheStore.getAny(SecurityUtils.buildTokenAccessKey(token), Integer.class);
@@ -112,7 +128,15 @@ public class AdminAuthenticationFilter extends AbstractAuthenticationFilter {
         // Build user detail
         UserDetail userDetail = new UserDetail(user);
 
+        // 将用户信息存储到 ThreadLocal 中
         // Set security
+        /*
+        * 这个逼userDetail也只是包装一个user对象然后 get set 方法
+        * 然后这个逼AuthenticationImpl只是包装了一个userDetail的对象
+        * 最后这个逼SecurityContextImpl 也只是包装这个 AuthenticationImpl
+        *
+        * 将这个SecurityContextImpl作为ThreadLocal的value放进去 作为线程的局部变量
+        * */
         SecurityContextHolder
             .setContext(new SecurityContextImpl(new AuthenticationImpl(userDetail)));
 

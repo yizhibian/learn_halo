@@ -60,6 +60,10 @@ public class AdminController {
     @CacheLock(autoDelete = false, prefix = "login_precheck")
     public LoginPreCheckDTO authPreCheck(@RequestBody @Valid LoginParam loginParam) {
         final User user = adminService.authenticate(loginParam);
+        /*
+        * 默认情况下是不开启两步验证码的（MFAType 的默认值为 0），因此响应中的 needMFACode 为 false。
+        * 这里的登录会给拦截
+        * */
         return new LoginPreCheckDTO(MFAType.useMFA(user.getMfaType()));
     }
 

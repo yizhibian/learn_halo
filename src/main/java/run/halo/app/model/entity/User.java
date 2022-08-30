@@ -11,6 +11,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 import run.halo.app.model.enums.MFAType;
@@ -25,8 +26,8 @@ import run.halo.app.utils.DateUtils;
 @Data
 @Entity
 @Table(name = "users")
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
+@ToString//@ToString(callSuper = true) // Lombok 注解, callSuper = true 表示调用 toString() 方法时输出父类的属性
+@EqualsAndHashCode(callSuper = true)//自动生成 equals() 和 hashCode() 方法, 默认 callSuper 为 false, 为 true 表示 equals() 方法比较时会调用父类的 equals() 方法
 public class User extends BaseEntity {
 
     @Id

@@ -11,6 +11,7 @@ import org.springframework.lang.Nullable;
  */
 public class SecurityContextHolder {
 
+    //
     private static final ThreadLocal<SecurityContext> CONTEXT_HOLDER = new ThreadLocal<>();
 
     private SecurityContextHolder() {

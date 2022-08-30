@@ -35,10 +35,23 @@ import run.halo.app.model.enums.PostStatus;
 @Data
 @Entity(name = "BasePost")
 @Table(name = "posts", indexes = {
+    /*
+    * @Index代表是符合索引 对应的是数据库里的字段名
+    * @DiscriminatorColumn指明了用作区分的字段
+    * @DiscriminatorValue(value = "0") 作用就是指明该字段的具体值 ----->Post
+    *                    (value = "1")                       ----->Sheet
+    * */
     @Index(name = "posts_type_status", columnList = "type, status"),
     @Index(name = "posts_create_time", columnList = "create_time")})
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.INTEGER,
     columnDefinition = "int default 0")
+
+/*
+* @EqualsAndHashCode(callSuper = true)，那就是用自己的属性和从父类继承的属性 来生成hashcode
+*
+* “去了解下为啥要重写hashcode和equals方法。要是说你觉得你造了，那再问一下，set为啥能去重复呢？
+* 刚刚那2个tv都放到一个set里面，能放进去吗？深入了解一下吧。”
+* */
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class BasePost extends BaseEntity {

@@ -306,6 +306,13 @@ public abstract class BasePostServiceImpl<POST extends BasePost>
         // word count stat
         post.setWordCount(htmlFormatWordCount(postContent.getContent()));
         POST savedPost;
+        /*
+        * 判断是更新还是新建一个post
+        *
+        * 根据存不存在postId
+        *
+        * 但是是怎么判断是更新还是新建的？
+        * */
         // Create or update post
         if (ServiceUtils.isEmptyId(post.getId())) {
             // The sheet will be created
@@ -320,6 +327,10 @@ public abstract class BasePostServiceImpl<POST extends BasePost>
             savedPost = update(post);
         }
 
+        /*
+        * 查看状态是展出或者私密展出
+        * 然后就保存内容（content
+        * */
         if (PostStatus.PUBLISHED.equals(post.getStatus())
             || PostStatus.INTIMATE.equals(post.getStatus())) {
             contentService.publishContent(post.getId());

@@ -145,24 +145,51 @@ public class PostAssembler extends BasePostAssembler<Post> {
     public Page<PostListVO> convertToListVo(Page<Post> postPage) {
         Assert.notNull(postPage, "Post page must not be null");
 
+        /*
+        * 这里是获取内容 getContent 一般就是Page的里面的数据
+        * 然后转成Post的链表
+        * */
         List<Post> posts = postPage.getContent();
 
+        /*
+        * 工具类 通过流的方式将所有Post的Id获取出来放进集合里面
+        * */
         Set<Integer> postIds = ServiceUtils.fetchProperty(posts, Post::getId);
 
+
+        /*
+        * 根据postIds每个id的tag
+        * 下面大同小异
+        * */
         // Get tag list map
         Map<Integer, List<Tag>> tagListMap = postTagService.listTagListMapBy(postIds);
 
+        /*
+        * 这个是找到目录
+        * 流程是同样的 感觉有点冗余了
+        * */
         // Get category list map
         Map<Integer, List<Category>> categoryListMap = postCategoryService
             .listCategoryListMap(postIds);
 
+        /*
+        * 这个没看懂 计算每个post的评论数量之类的这样
+        * */
         // Get comment count
         Map<Integer, Long> commentCountMap = postCommentService.countByStatusAndPostIds(
             CommentStatus.PUBLISHED, postIds);
 
+        /*
+        * 元数据 不了解作用 属于文章的高级属性
+        * */
         // Get post meta list map
         Map<Integer, List<PostMeta>> postMetaListMap = postMetaService.listPostMetaAsMap(postIds);
 
+        /*
+        * 填充属性
+        * 这里的map方法不是指stream的map（大概 理解应该是装配
+        * page本来就是一个壳
+        * */
         return postPage.map(post -> {
             PostListVO postListVO = new PostListVO().convertFrom(post);
 
@@ -170,11 +197,24 @@ public class PostAssembler extends BasePostAssembler<Post> {
 
             Optional.ofNullable(tagListMap.get(post.getId())).orElseGet(LinkedList::new);
 
+            /*
+            * 转成stream然后过滤 所有非空
+            * 然后将所有tag转成tagDTO
+            * 最后用收集器收集成list
+            * */
             // Set tags
             postListVO.setTags(Optional.ofNullable(tagListMap.get(post.getId()))
+                /*
+                * 给他设置tags
+                * 如果没有的话就就调用new LinkedList的方法
+                * */
                 .orElseGet(LinkedList::new)
                 .stream()
                 .filter(Objects::nonNull)
+                /*
+                * 然后全部转换成tagDTO
+                * 最后收集成list
+                * */
                 .map(tagService::convertTo)
                 .collect(Collectors.toList()));
 

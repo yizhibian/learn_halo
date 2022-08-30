@@ -154,6 +154,12 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public void clearToken() {
         // Check if the current is logging in
+        /*
+        * 从ThreadLocal中获取当前的Authentication对象
+        *
+        * 这个过程 getContext -> ThreadLocal.get （key,value的方式） 获取这个 SecurityContextImpl 对象
+        * 然后再从SecurityContextImpl中获取Authentication对象
+        * */
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {
@@ -302,17 +308,45 @@ public class AdminServiceImpl implements AdminService {
         // Generate new token
         AuthToken token = new AuthToken();
 
+        /*
+        * token 中包含了 accessToken（随机生成的 UUID）、refreshToken（随机生成的 UUID）以及 accessToken 和 refreshToken 的过期时间
+        *
+        *浏览器将 token 保存在了 Local Storate：（理解是一个本地存储空间这样
+        * 当浏览器下次请求资源时，会将 accessToken 存入到 Request Headers 中 Admin-Authorization 头域：
+        *
+        * 卧槽双token nb
+        * accessToken 过期后 服务器会返回 “Token 已过期或不存在” 的失败响应，
+        * 此时浏览器可以发送 /api/admin/refresh/{refreshToken} 请求，
+        * 通过 refreshToken 向服务器申请一个新的 token（包括 accessToken 和 refreshToken），
+        * 然后使用新的 accessToken 重新发送之前未处理成功的请求。
+        * */
         token.setAccessToken(HaloUtils.randomUUIDWithoutDash());
         token.setExpiredIn(ACCESS_TOKEN_EXPIRED_SECONDS);
         token.setRefreshToken(HaloUtils.randomUUIDWithoutDash());
 
+        /*
+        * 服务器使用 cacheStore 存储用户 id 和 token ，cacheStore 是项目中的内部缓存，它使用 ConcurrentHashMap 作为容器。
+        * */
+
         // Cache those tokens, just for clearing
+        //缓存那些令牌，只是为了清理
+        /*
+        * key:"halo.admin.access_token."+ user.getId()
+        * value:AccessToken
+        * */
         cacheStore.putAny(SecurityUtils.buildAccessTokenKey(user), token.getAccessToken(),
             ACCESS_TOKEN_EXPIRED_SECONDS, TimeUnit.SECONDS);
         cacheStore.putAny(SecurityUtils.buildRefreshTokenKey(user), token.getRefreshToken(),
             REFRESH_TOKEN_EXPIRED_DAYS, TimeUnit.DAYS);
 
         // Cache those tokens with user id
+        //缓存那些带有用户id的令牌
+        /*
+        * key:"halo.admin.access_token."+ AccessToken
+        * value:user.getId()
+        *
+        * 反向存储（自己编的名字
+        * */
         cacheStore.putAny(SecurityUtils.buildTokenAccessKey(token.getAccessToken()), user.getId(),
             ACCESS_TOKEN_EXPIRED_SECONDS, TimeUnit.SECONDS);
         cacheStore.putAny(SecurityUtils.buildTokenRefreshKey(token.getRefreshToken()), user.getId(),

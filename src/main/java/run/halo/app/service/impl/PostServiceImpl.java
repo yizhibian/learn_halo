@@ -597,10 +597,14 @@ public class PostServiceImpl extends BasePostServiceImpl<Post> implements PostSe
         Set<Integer> categoryIds, Set<PostMeta> metas) {
         Assert.notNull(post, "Post param must not be null");
 
+        // 格式化文章的内容, 检查文章的别名是否有重复, 都没问题就创建文章
         post = super.createOrUpdateBy(post);
 
+        // 移除文章原先绑定的标签
         postTagService.removeByPostId(post.getId());
 
+        // 移除文章原先绑定的目录
+        // List all tags
         postCategoryService.removeByPostId(post.getId());
 
         // List all tags
@@ -609,6 +613,10 @@ public class PostServiceImpl extends BasePostServiceImpl<Post> implements PostSe
         // List all categories
         List<Category> categories = categoryService.listAllByIds(categoryIds);
 
+
+        /*
+        * 感觉有点乱的逻辑 写的很复杂 但是就是更新postTags
+        * */
         // Create post tags
         List<PostTag> postTags = postTagService.mergeOrCreateByIfAbsent(post.getId(),
             ServiceUtils.fetchProperty(tags, Tag::getId));
@@ -616,6 +624,11 @@ public class PostServiceImpl extends BasePostServiceImpl<Post> implements PostSe
         log.debug("Created post tags: [{}]", postTags);
 
         // Create post categories
+        /*
+        * 合并或根据id新建
+        *
+        * 同上的 都是用两个队列一个toremove一个tocreate 然后在最后更新
+        * */
         List<PostCategory> postCategories =
             postCategoryService.mergeOrCreateByIfAbsent(post.getId(),
                 ServiceUtils.fetchProperty(categories, Category::getId));

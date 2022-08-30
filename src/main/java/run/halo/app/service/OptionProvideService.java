@@ -191,6 +191,11 @@ public interface OptionProvideService {
      */
     default <T> Optional<T> getByProperty(@NonNull PropertyEnum property,
         @NonNull Class<T> propertyType) {
+
+        /*
+        * 搞不懂 就是获取了一个 Optional 的操作对象？
+        * 然后用 map （类似流那样的操作） 将这个值转换成 需要的类型
+        * */
         return getByProperty(property)
             .map(propertyValue -> PropertyEnum.convertTo(propertyValue.toString(), propertyType));
     }

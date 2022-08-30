@@ -9,12 +9,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import javax.annotation.Resource;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
@@ -50,7 +52,6 @@ public abstract class AbstractAuthenticationFilter extends OncePerRequestFilter 
     protected final AbstractStringCacheStore cacheStore;
     private final UrlPathHelper urlPathHelper = new UrlPathHelper();
     private final OneTimeTokenService oneTimeTokenService;
-
     private volatile AuthenticationFailureHandler failureHandler;
     /**
      * Exclude url patterns.
@@ -220,12 +221,19 @@ public abstract class AbstractAuthenticationFilter extends OncePerRequestFilter 
 
         try {
             // Check the one-time-token
+            /*
+            * 进行一次性 token 检查
+            * 我猜测这里和token的设计有关系 类似失效之类的
+            * */
             if (isSufficientOneTimeToken(request)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Do authenticate
+            // Do authenticate、
+            /*
+            * 这里留给子类去实现
+            * */
             doAuthenticate(request, response, filterChain);
         } catch (AbstractHaloException e) {
             getFailureHandler().onFailure(request, response, e);

@@ -61,11 +61,16 @@ public class MainController {
         return HaloConst.HALO_VERSION;
     }
 
+    /*
+    * 提示安装会到这里
+    * http://127.0.0.1:8090/install
+    * */
     @GetMapping("install")
     public String installation() throws IOException {
         boolean isInstalled = optionService
             .getByPropertyOrDefault(PrimaryProperties.IS_INSTALLED, Boolean.class, false);
         if (!isInstalled) {
+            // /admin/index.html#install 一样的
             return StringUtils.appendIfMissing(this.haloProperties.getAdminPath(), "/")
                 + INSTALL_REDIRECT_URI;
         } else {

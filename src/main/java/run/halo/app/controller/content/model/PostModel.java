@@ -177,10 +177,32 @@ public class PostModel {
     }
 
     public String list(Integer page, Model model) {
+
+        /*
+        * 感觉有点复杂了 或者是我没理解 （提高存取的转化速度？
+        *
+        * 获取每页的长度 getPostPageSize() 会去一个PostProperties 里面找到值
+        * 但是有个挺复杂的转化过程 不知道意义所在
+        * 通过Optional调用去转换成所需要的类型这样
+        * */
         int pageSize = optionService.getPostPageSize();
+
+        /*
+        * 最后是传入了一个排序的规则这样？
+        * 具体规则的定义也是在PostProperties中修改的
+        *
+        * 这个Pageable指的是一个页面的规则这样
+        * */
         Pageable pageable = PageRequest
             .of(page >= 1 ? page - 1 : page, pageSize, postService.getPostDefaultSort());
 
+        /*
+        * 这里就是根据pageable的要求 多少页 每页数据的数量 排序规则等
+        * PostStatus.PUBLISHED 是指状态
+        *
+        * 填充了一些属性
+        * 最后送进前端
+        * */
         Page<Post> postPage = postService.pageBy(PostStatus.PUBLISHED, pageable);
         Page<PostListVO> posts = postRenderAssembler.convertToListVo(postPage);
 
@@ -188,6 +210,10 @@ public class PostModel {
         model.addAttribute("posts", posts);
         model.addAttribute("meta_keywords", optionService.getSeoKeywords());
         model.addAttribute("meta_description", optionService.getSeoDescription());
+
+        /*
+        * 找到一条路径（主题路径
+        * */
         return themeService.render("index");
     }
 
